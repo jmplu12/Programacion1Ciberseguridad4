@@ -1,0 +1,92 @@
+Aquí le explico paso a paso cómo desarrollé mi algoritmo firewall desde el pseudocódigo original:
+Paso 1: Entendí el Pseudocódigo Original
+Miré el código PSeInt y vi que hacía esto:
+·	3 IPs bloqueadas fijas con Dimensionar bloqueadas(3)
+·	3 paquetes con IP, puerto y protocolo: paquetes(3,3)
+·	Doble bucle FOR para comparar: Para i, Para j, Si paquetes[i,1]=bloqueadas[j]
+Mi primer desafío: Python no tiene arreglos fijos como PSeInt, usa listas dinámicas [.
+Invirtiendo los arreglos:
+python
+bloqueadas = []  # Lista vacía en vez de bloqueadas(3)
+paquetes = []    # Lista de listas en vez de paquetes(3,3)
+for i in range(1, 4):  # Igual que "Para i<-1 Hasta 3"
+    ip = input(f"IP bloqueada #{i}")
+    bloqueadas.append(ip)  # append() agrega al final
+
+El doble FOR lo simplifiqué:
+python
+if paquetes[i][0] in bloqueadas:  # "in" hace lo mismo que el FOR anidado
+
+Paso 3: Lo Hice Dinámico (No Fijo en 3)
+Pensé: "¿Por qué limitar a 3? Mejor que el usuario decida cuántas IPs quiere".
+Cambié los FOR por WHILE:
+python
+while True:
+    ip = input("Ingrese IP bloqueada: ")
+    if ip.upper() == "FIN":
+        break  # Sale cuando usuario dice basta
+    bloqueadas.append(ip)
+Paso 4: Agregué Validación de IP
+Problema: El usuario puede poner "abc" como IP. ¡No puede ser!
+Solución: Busqué cómo validar IPs en Python y encontré ipaddress:
+python
+import ipaddress
+try:
+    ipaddress.ip_address(ip)  # Si falla, lanza ValueError
+    return ip
+except ValueError:
+    print("IP inválida, intente otra")
+
+Creé una función reutilizable:
+python
+def leer_ip(mensaje):
+    while True:  # Repite hasta que dé IP correcta
+        ip = input(mensaje)
+        try:
+            ipaddress.ip_address(ip)
+            return ip
+        except:
+            print("Error")
+
+Paso 5: Evité Duplicados
+Idea: No tiene sentido bloquear la misma IP dos veces.
+python
+if ip in bloqueadas:
+    print("Ya está bloqueada")
+else:
+    bloqueadas.append(ip)
+Paso 6: Validé Puertos (1-65535)
+Pensé: Los puertos van de 1 a 65535, no puede ser 0 o 99999.
+python
+while True:
+    puerto = input("Puerto (1-65535): ")
+    if puerto.isdigit() and 1 <= int(puerto) <= 65535:
+        break
+
+Paso 7: Ensamblé Todo Junto
+text
+1. Función leer_ip() para validar IPs
+2. WHILE para IPs bloqueadas hasta "FIN"  
+3. WHILE para paquetes (IP+puerto+protocolo) hasta "FIN"
+4. FOR para revisar cada paquete: if ip in bloqueadas → BLOQUEADO
+
+El Código Final que Desarrollé
+·	✅ IPs ilimitadas (no fijo en 3)
+·	✅ Valida IPv4/IPv6 automáticamente
+·	✅ No acepta duplicados
+·	✅ Puertos correctos 1-65535
+·	✅ Sale con "FIN" cuando quiero
+Por Qué Estoy Orgulloso
+1.	Del pseudocódigo rígido → sistema flexible
+2.	Maneja errores (no se cuelga si pones IP mala)
+3.	Profesional: Usa módulos estándar Python (ipaddress)
+4.	Fácil de usar: Solo escribe "FIN" y ya
+Ejemplo de mi prueba:
+text
+IP bloqueada: 192.168.1.100
+IP bloqueada: 8.8.8.8
+IP bloqueada: FIN
+Paquete IP: 192.168.1.100 → BLOQUEADO ✓
+Paquete IP: 10.0.0.5 → PERMITIDO ✓
+
+Lo hice pensando en un firewall real: bloquea IPs malas, deja pasar las buenas. ¡Funciona perfecto profesor!
